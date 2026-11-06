@@ -1,0 +1,67 @@
+version: 1
+figure_id: fig1_main
+
+title: "Three conserving arms: exact by construction, no thinner than the reference, architecture-limited accuracy"
+purpose: >-
+  Conservation costs nothing in accuracy (a) or sharpness (c); the one arm without
+  it is off by five orders of magnitude in mass (b).
+expression: "three bars per arm: rel-L2 with 95% CI (a), log-scale mass residual (b), edge thickness ratio against an estimator floor (c)"
+arrangement: "row-1, full width, three panels side by side"
+
+data:
+  sources:
+    - path: "code/results/*_s*/*/metrics_test.json"
+      role: primary
+      note: "run directories from figlib.run_dirs(); FluxNet seed 0 predates the per-seed layout and sits under results/s11/"
+    - path: "code/results/_sharp/<arm>_s*/metrics_test.json"
+      role: primary
+  fields:
+    - "rel_l2.final"
+    - "conservation.r_final_mean"
+    - "sharpness_grad.ratio_median"
+  filters:
+    - "arms: cmo, fluxnet, nfv, fno"
+    - "seeds: 0-4"
+    - "60 test trajectories per arm and seed, scored at t = 200"
+  grouping: ["arm"]
+  aggregation: "mean over the five seeds"
+  uncertainty: "95% CI over seeds in (a) and (c), t(0.95, 4) = 2.776; seed range in (b)"
+  statistical_notes: >-
+    The dashed line in (c) is the estimator floor, w = 1.1 cell; a ratio below it
+    is resolution, not sharpness.
+
+panels:
+  a:
+    quantity: "final relative L2 error, 60 test trajectories, t = 200"
+    statistic: "mean of 5 seeds; bar = 95% CI, t(0.95, 4) = 2.776"
+    source: "results/<arm>_s*/metrics_test.json : rel_l2.final"
+  b:
+    quantity: "relative mass residual r(t = 200), log scale"
+    statistic: "seed mean; whisker = seed range"
+    source: "results/<arm>_s*/metrics_test.json : conservation.r_final_mean"
+  c:
+    quantity: "edge thickness / reference thickness, measured at the reference front"
+    statistic: "mean of 5 seeds; bar = 95% CI; dashed = estimator floor at w = 1.1 cell"
+    source: "results/_sharp/<arm>_s*/metrics_test.json : sharpness_grad.ratio_median"
+
+layout:
+  units: mm
+  width: 164.6
+  height: 78
+  size_source: publication_override
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    cmo: blue
+    fluxnet: teal
+    nfv: orange
+    fno: charcoal
+
+exceptions: []
+
+notes: >-
+  FNO's 0.62 lies below the estimator floor, so it reads as spurious concentration,
+  not a sharper front (docs/dev_log.md, 2026-11-03).

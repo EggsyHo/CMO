@@ -1,0 +1,62 @@
+version: 1
+figure_id: fig2_decomposition
+
+title: "The error is a shape term plus one shared displacement: 26-35% of it is removed by a rigid shift"
+purpose: >-
+  A best-fit rigid shift removes a quarter to a third of every arm's error, and the
+  removable part is the same size in all seven arms (a); per trajectory the
+  distribution is nearly identical (b), so the arms differ in shape, not in transport.
+expression: "paired open/filled bars per arm (a), empirical CDF (b)"
+arrangement: "row-2, full width, two panels side by side"
+
+data:
+  sources:
+    - path: "code/results/_lag_decomposition.json"
+      role: primary
+  fields:
+    - "E_total"
+    - "E_shape"
+  filters:
+    - "arms: the seven rows of the decomposition table (figlib.ORDER7)"
+    - "5 seeds x 60 trajectories per arm"
+  grouping: ["arm"]
+  aggregation: "mean over 5 seeds x 60 trajectories; the printed percentage is 1 - mean(E_shape)/mean(E_total)"
+  uncertainty: null
+  statistical_notes: >-
+    E_disp = E_total - E_shape is the part removable by the best periodic integer
+    shift; the CDF in (b) is over 300 trajectories per arm.
+
+panels:
+  a:
+    quantity: "E_total (open) and E_shape (filled), the error left after the best periodic integer shift"
+    statistic: "mean over 5 seeds x 60 trajectories; the printed percentage is 1 - mean(E_shape)/mean(E_total)"
+    source: "results/_lag_decomposition.json : E_total, E_shape"
+  b:
+    quantity: "cumulative distribution of E_disp = E_total - E_shape per trajectory"
+    statistic: "empirical CDF over 300 trajectories per arm"
+    source: "results/_lag_decomposition.json : E_total, E_shape"
+
+layout:
+  units: mm
+  width: 164.6
+  height: 78
+  size_source: publication_override
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    cmo: blue
+    cmo_nosep: blue_light
+    cmo_af: coral
+    cmo_af_nosep: coral_light
+    fluxnet: teal
+    nfv: orange
+    fno: charcoal
+
+exceptions: []
+
+notes: >-
+  The atom at zero is not a defect: the modal optimum is no shift at all, on 50-72 of
+  300 trajectories (docs/papers/main_text.md, 'Displacement vs shape').

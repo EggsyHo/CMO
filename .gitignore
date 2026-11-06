@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------- generated data
+# Rebuild with `bash scripts/gen_data.sh`; the four .h5 files are ~4.4 GB in total.
+data/adr2d/
+*.h5
+
+# -------------------------------------------------------------- training outputs
+# Per-run metrics stay in the repository (results/**/*.json, *.csv, *.yaml);
+# weights, field dumps and run logs are regenerable and are not committed.
+results/**/*.pth
+results/**/*.pt
+results/**/*.ckpt
+results/**/*.bin
+results/**/*.npz
+results/**/*.log
+results/**/*.err
+results/**/*.out
+results/**/*.done
+results/**/*.status
+logs/
+
+# written by fig/qa_check.py on every run
+fig/qa-report.json
+
+# ---------------------------------------------------------------------- python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.ipynb_checkpoints/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# -------------------------------------------------------------- editors and OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini

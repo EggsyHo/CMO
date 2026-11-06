@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the accompanying manuscript."
+title: "Conservation-Exact Multiscale Operator Learning for Sharp-Front Transport Fields"
+type: software
+version: 1.0.0
+license: MIT
+year: 2026
+authors:
+  - family-names: He
+    given-names: Chenze
+    orcid: "https://orcid.org/0009-0007-0904-0868"
+    email: hecz@mail.ustc.edu.cn
+    affiliation: >-
+      Hefei Institutes of Physical Science, Chinese Academy of Sciences, Hefei 230010, China;
+      University of Science and Technology of China, Hefei 230026, China
+  - family-names: Zhou
+    given-names: Boya
+    email: zby0529@mail.ustc.edu.cn
+    affiliation: >-
+      Hefei Institutes of Physical Science, Chinese Academy of Sciences, Hefei 230010, China;
+      University of Science and Technology of China, Hefei 230026, China
+  - family-names: Zhang
+    given-names: Ningxin
+    affiliation: >-
+      Shanghai HyperGryph Network Technology Co., Ltd., Shanghai 201802, China

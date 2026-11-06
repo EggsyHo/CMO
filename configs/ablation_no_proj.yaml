@@ -1,0 +1,9 @@
+run:      {tag: abl_no_proj, seed: 0, out: results}
+data:     {path: data/adr2d/adr2d.h5, N: 64, K: 4, num_workers: 0, batch_size: 16}
+model:    {name: cmo, block: 2, coarse_width: 16, modes: 12, n_layers: 4,
+           wave_width: 32, wavelet: db2, use_separation: true, use_projection: false,
+           gate: {beta_init: 4.0, tau_init: 0.1}}
+training: {lr: 1.0e-3, weight_decay: 0.0, gamma1: 1.0, gamma2: 0.5, use_detail: true,
+           budget_min: 25, patience: 8, amp: true, grad_clip: 1.0}
+eval:     {steps: 40, long_steps: 1000, ref_long_steps: 200}
+logging:  {log_dir: logs, save_every: 1}

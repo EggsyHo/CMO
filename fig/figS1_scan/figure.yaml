@@ -1,0 +1,68 @@
+version: 1
+figure_id: figS1_scan
+
+title: "Zero-shot at a 20x anisotropy ratio: CMO's deficit against FluxNet grows, and the detail branch still helps in nearly every case"
+purpose: >-
+  With no retraining, the 40 cases at kappa = 1 and the 40 at kappa = 20 put CMO 8.3%
+  and 10.5% of FluxNet's error above it, while CMO beats FluxNet in only 13/40 and 5/40
+  cases (a). The detail branch keeps paying at both levels - 5.7% and 6.6% of error for
+  Form A, 3.6% and 3.5% for Form B, with 37/40 and 40/40 (A), 39/40 and 40/40 (B) cases
+  improved (b).
+expression: "paired strip plots with median bars, one row per anisotropy level (a, b)"
+arrangement: "row-S, left half, two stacked panels"
+
+data:
+  sources:
+    - path: "code/results/_zshot/kappa_<arm>/rollout_test.npz"
+      role: primary
+      note: "per-case rollout; arms cmo, cmo_nosep, cmo_af, cmo_af_nosep, fluxnet"
+    - path: "code/data/adr2d/adr2d_kappa.h5"
+      role: primary
+      note: "params column 2 is the anisotropy ratio, used to split the 80 cases into 40 + 40"
+  fields:
+    - "pred[:, 0, -1, 0] (final frame)"
+    - "ref[:, 0, -1, 0]"
+  filters:
+    - "levels: kappa = 1.0 (cases 0-39) and kappa = 20.0 (cases 40-79)"
+    - "no retraining: the checkpoints are the in-range models"
+  grouping: ["arm", "kappa level"]
+  aggregation: "difference of pooled means for the printed percentage; median bar per group"
+  uncertainty: null
+  statistical_notes: >-
+    rel-L2 is recomputed per case from the npz with src.utils.metrics.rel_l2, because
+    the summary json only keeps the pooled statistics; the printed percentage is the
+    difference of the two pooled means, not the mean of the per-case ratios.
+
+panels:
+  a:
+    quantity: "per-case relative L2 difference CMO vs FluxNet, in percent of the FluxNet error"
+    statistic: "40 cases per level; heavy bar = median; the printed percentage is the difference of the pooled means"
+    source: "results/_zshot/kappa_<arm>/rollout_test.npz, recomputed with src.utils.metrics.rel_l2"
+  b:
+    quantity: "per-case gain from the detail branch: (no-detail - detail) / detail"
+    statistic: "40 cases per level and form; heavy bar = median; printed counts are cases improved"
+    source: "same four rollout files"
+
+layout:
+  units: mm
+  width: 90
+  height: 110
+  size_source: layout_default
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    cmo: blue
+    cmo_nosep: blue_light
+    cmo_af: coral
+    cmo_af_nosep: coral_light
+    fluxnet: teal
+
+exceptions: []
+
+notes: >-
+  kappa is the anisotropy ratio alpha_L/alpha_T, not a heterogeneity strength, and the
+  two levels differ in flow structure as well: this is a two-level dose axis, not a
+  controlled single variable (claim 9).

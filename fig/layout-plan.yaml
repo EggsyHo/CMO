@@ -1,0 +1,113 @@
+# Physical layout for every figure in this set (research[fig] layout-defaults).
+# All lengths in millimetres. 165 mm = the \textwidth of the AWR (cas-sc)
+# template, which is the width the figures are drawn at; figS1/figS2 keep their
+# native 90 mm and are included at 0.55\textwidth.
+version: 1
+units: mm
+
+# The target journal is known now, so the geometry lives here rather than in the
+# Skill's YAML defaults.
+publication_override:
+  journal: "Advances in Water Resources"
+  template: "Elsevier cas-sc, single column"
+  textwidth_pt: 468.3324
+  textwidth_mm: 164.6
+  source: "docs/manuscripts/paper.log (\textwidth at 10 pt); artwork guidance asks for >= 7 pt type"
+  note: >-
+    Figures are drawn at the printed width so that the point sizes in figlib.SIZE
+    are the printed point sizes; figS1/figS2 stay at 90 mm, included at 0.55\textwidth.
+
+rows:
+  - id: row-0
+    target_width: 164.6
+    target_height: 75.7
+    horizontal_gaps: []
+    figures: [fig0_framework]
+  - id: row-1
+    target_width: 164.6
+    target_height: 78.0
+    horizontal_gaps: []
+    figures: [fig1_main]
+  - id: row-2
+    target_width: 164.6
+    target_height: 78.0
+    horizontal_gaps: []
+    figures: [fig2_decomposition]
+  - id: row-3
+    target_width: 164.6
+    target_height: 78.0
+    horizontal_gaps: []
+    figures: [fig3_ablation]
+  - id: row-4
+    target_width: 164.6
+    target_height: 78.0
+    horizontal_gaps: []
+    figures: [fig4_dtband]
+  - id: row-5
+    target_width: 164.6
+    target_height: 78.0
+    horizontal_gaps: []
+    figures: [fig5_retrain]
+  - id: row-S
+    target_width: 190
+    target_height: 110
+    horizontal_gaps: [10]
+    figures: [figS1_scan, figS2_extrap]
+
+figures:
+  - id: fig0_framework
+    directory: code/fig/fig0_framework
+    panels: "1 x 1"
+    width: 164.6
+    height: 75.7
+    size_source: publication_override
+    role: "framework schematic: mass-exact partition feeding a coarse and a detail lane"
+  - id: fig1_main
+    directory: code/fig/fig1_main
+    panels: "1 x 3"
+    width: 164.6
+    height: 78
+    size_source: publication_override
+    role: "main result: error, conservation, edge thickness"
+  - id: fig2_decomposition
+    directory: code/fig/fig2_decomposition
+    panels: "1 x 2"
+    width: 164.6
+    height: 78
+    size_source: publication_override
+    role: "error budget: shared under-transport vs shape"
+  - id: fig3_ablation
+    directory: code/fig/fig3_ablation
+    panels: "1 x 2"
+    width: 164.6
+    height: 78
+    size_source: publication_override
+    role: "ablation 2 x 2: separation head x flux form"
+  - id: fig4_dtband
+    directory: code/fig/fig4_dtband
+    panels: "1 x 3"
+    width: 164.6
+    height: 78
+    size_source: publication_override
+    role: "single-variable dt band: form A flat, form B diverges"
+  - id: fig5_retrain
+    directory: code/fig/fig5_retrain
+    panels: "1 x 2"
+    width: 164.6
+    height: 78
+    size_source: publication_override
+    role: "retrained on three rates: same verdict, now without extrapolation"
+  - id: figS1_scan
+    directory: code/fig/figS1_scan
+    panels: "2 x 1"
+    width: 90
+    height: 110
+    size_source: layout_default
+    role: "supplement: two anisotropy levels, CMO deficit and detail-branch gain"
+  - id: figS2_extrap
+    directory: code/fig/figS2_extrap
+    panels: "2 x 1"
+    width: 90
+    height: 110
+    size_source: layout_default
+    role: "supplement: extrapolation bands, training range vs kappa = 20"

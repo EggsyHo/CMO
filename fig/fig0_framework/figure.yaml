@@ -1,0 +1,62 @@
+version: 1
+
+figure_id: fig0_framework
+
+title: "A mass-exact partition feeding two branches: conservation from the divergence, sharpness from the residual"
+
+purpose: >-
+  Show the construction claimed in Sec. 3.1 in one glance: the composite mass is
+  split into a coarse cell average and a per-cell zero-mean residual, the coarse
+  branch advances mass through a face flux whose divergence telescopes, the
+  detail branch may change anything except the per-cell mass-weighted mean, and
+  both therefore leave the audited budget untouched.
+
+expression: "left-to-right block diagram, two parallel branches merging into one state update, audit band at the foot"
+
+arrangement: "single row of two branch lanes, full width"
+
+data:
+  sources: []
+  fields: []
+  filters: []
+  grouping: []
+  aggregation: "none — schematic, no data is plotted"
+  statistical_notes: >-
+    No quantity is encoded by position, area or colour; every number printed in
+    the figure (12 modes, c_cfl <= 1/4, 1e-14) is a design constant documented in
+    Secs. 3.3-3.5, not a measured result.
+
+panels:
+  a:
+    quantity: "coarse lane: Pi m -> spectral branch -> face flux -> -dt div(F)"
+    statistic: "none"
+    source: "Secs. 3.2-3.3 (code: src/models/cmo.py, src/models/blocks.py)"
+  b:
+    quantity: "detail lane: (I-Pi) m -> db2 detail energy + gate -> conv, tanh, mass-weighted projection"
+    statistic: "none"
+    source: "Sec. 3.4 (code: src/models/blocks.py: SoftGate, mass_weighted_project)"
+
+layout:
+  units: mm
+  width: 164.6
+  height: 75.7
+  size_source: publication_override
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    coarse_branch: blue
+    detail_branch: teal
+    exactness_badges: orange
+    neutral_boxes: charcoal
+
+exceptions:
+  - "Schematic rather than data plot: no axis, no legend, no scale; readable in greyscale because the two lanes are also separated vertically and labelled."
+
+notes: >-
+  The two equality badges are the whole argument of the figure: the coarse lane
+  conserves because a divergence telescopes, the detail lane conserves because it
+  is projected in the mass inner product, and neither fact depends on any learned
+  weight. A reader who takes only the badges away has taken the right thing.

@@ -1,0 +1,9 @@
+{
+  "run_id": "nfv_adr2d_0",
+  "config": "configs\\baseline_nfv.yaml",
+  "overrides": [
+    "run.out=results/s11"
+  ],
+  "config_hash": "0a968ed14d8a",
+  "param_count": 265731
+}

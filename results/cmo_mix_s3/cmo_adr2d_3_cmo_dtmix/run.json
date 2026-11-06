@@ -1,0 +1,13 @@
+{
+  "run_id": "cmo_adr2d_3_cmo_dtmix",
+  "config": "configs\\default.yaml",
+  "overrides": [
+    "data.paths=data/adr2d/adr2d_mixA.h5,data/adr2d/adr2d_mixB.h5,data/adr2d/adr2d_mixC.h5",
+    "data.num_workers=4",
+    "run.seed=3",
+    "run.out=results/cmo_mix_s3",
+    "run.tag=cmo_dtmix"
+  ],
+  "config_hash": "58d83a8fac0a",
+  "param_count": 308407
+}

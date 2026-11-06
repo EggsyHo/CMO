@@ -1,0 +1,61 @@
+version: 1
+figure_id: fig5_retrain
+
+title: "Retrained on all three rates, the bounded form is still behind - including at the step it was trained on"
+purpose: >-
+  With dt 0.100/0.050/0.020 in the training set and identical data, batches, seeds and
+  budget, form A moves by 0.001 across the three bands while form B sits 9.7% behind at
+  0.050, a rate inside its own training set, and its seed scatter grows ten-fold (a, b).
+expression: "per-seed lines across three bands (a), seed-sd bars on a log scale (b)"
+arrangement: "row-5, full width, two panels side by side"
+
+data:
+  sources:
+    - path: "code/results/_dtonly_<cell>_s{0..4}.json"
+      role: primary
+      note: "cells mix_cmo, mix_af; trained on the three-rate mixture"
+    - path: "code/results/_dtonly_<cell>_s{0..4}_holdout.json"
+      role: primary
+  fields:
+    - "coarse"
+    - "mid"
+    - "fine"
+  filters:
+    - "bands: dt = 0.100, 0.050, 0.020"
+    - "seeds: 0-4"
+    - "80 paired cases: 56 train + 24 holdout"
+  grouping: ["cell", "band"]
+  aggregation: "seed mean per case"
+  uncertainty: "sd(ddof=1) across the five seeds (b), log scale"
+  statistical_notes: >-
+    The 0.050 band shares all 80 parameter vectors with the other two and is inside the
+    training set, so the middle column needs no extrapolation argument.
+
+panels:
+  a:
+    quantity: "relative L2 error on the three bands, both forms retrained on the mixture"
+    statistic: "one thin line per seed (5), heavy line = seed mean"
+    source: "results/_dtonly_mix_{cmo,af}_s*[_holdout].json : coarse, mid, fine (56 + 24 cases)"
+  b:
+    quantity: "standard deviation across the five seeds, log scale"
+    statistic: "sd(ddof=1) of the per-seed means"
+    source: "same files"
+
+layout:
+  units: mm
+  width: 164.6
+  height: 78
+  size_source: publication_override
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    mix_cmo: blue
+    mix_af: coral
+
+exceptions: []
+
+notes: >-
+  Training used seed 7, scoring seed 0: no case appears in both.

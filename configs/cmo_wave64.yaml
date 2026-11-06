@@ -1,0 +1,5 @@
+# Diagnostic arm: is the detail branch's *capacity* the bottleneck?
+# Only `model.wave_width` moves (32 -> 64); everything else is default.yaml, so a
+# difference in test rel_l2 is attributable to the residual branch alone.
+run:      {tag: cmo_w64, seed: 0, out: results/cmo_w64}
+model:    {name: cmo, wave_width: 64}

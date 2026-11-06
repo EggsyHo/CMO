@@ -1,0 +1,10 @@
+{
+  "run_id": "cmo_adr2d_1_cmo_nosep",
+  "config": "configs\\cmo_nosep.yaml",
+  "overrides": [
+    "run.seed=1",
+    "run.out=results\\cmo_nosep_s1"
+  ],
+  "config_hash": "ae0bd99d6645",
+  "param_count": 296244
+}

@@ -1,0 +1,8 @@
+# normalise text to LF in the repository; keep generated binaries as-is
+* text=auto
+
+*.png binary
+*.pdf binary
+*.jpg binary
+*.gif binary
+*.svg text

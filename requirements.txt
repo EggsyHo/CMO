@@ -1,0 +1,14 @@
+# Python 3.11 is what the paper was produced with.
+# Install torch first and pick the wheel that matches your CUDA runtime, e.g.
+#   pip install torch --index-url https://download.pytorch.org/whl/cu121
+torch>=2.2
+
+numpy>=1.26
+h5py>=3.10
+scipy>=1.11
+PyYAML>=6.0
+PyWavelets>=1.5
+
+# figures only
+matplotlib>=3.8
+Pillow>=10.0

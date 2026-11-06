@@ -1,0 +1,44 @@
+data:
+  K: 4
+  N: 64
+  batch_size: 16
+  epoch_windows: 4096
+  num_workers: 0
+  path: data/adr2d/adr2d.h5
+  val_windows: 1024
+eval:
+  long_steps: 1000
+  ref_long_steps: 200
+  steps: 40
+logging:
+  log_dir: logs
+  save_every: 1
+model:
+  block: 2
+  coarse_width: 32
+  gate:
+    beta_init: 4.0
+    tau_init: 0.1
+  modes: 8
+  n_layers: 4
+  name: fno
+  use_projection: true
+  use_separation: true
+  wave_width: 32
+  wavelet: db2
+run:
+  out: results\fno_s2
+  run_id: fno_adr2d_2
+  seed: 2
+  tag: fno
+training:
+  amp: true
+  budget_min: 25
+  epochs: 200
+  gamma1: 1.0
+  gamma2: 0.5
+  grad_clip: 1.0
+  lr: 0.001
+  patience: 8
+  use_detail: true
+  weight_decay: 0.0

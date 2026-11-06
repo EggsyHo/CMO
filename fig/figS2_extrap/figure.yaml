@@ -1,0 +1,61 @@
+version: 1
+figure_id: figS2_extrap
+
+title: "Extrapolating to 20x anisotropy without retraining: every model degrades, none reorders"
+purpose: >-
+  On the `--regime ext,kappa20` split (40 cases inside the training range, 40 at
+  kappa = 20, five seeds), all four cells degrade at 20x - CMO by 13%, FluxNet by 4%,
+  Form B by 8% and Form B + factor by 15% - but the ranking is identical in both halves
+  (panel b), so the comparison between forms survives the extrapolation even though the
+  absolute error does not.
+expression: "per-case strip plots, pale vs solid per regime (a); slope chart joining the two pooled means (b)"
+arrangement: "row-S, right half, two stacked panels"
+
+data:
+  sources:
+    - path: "code/results/_ext80_<cell>_s{0..4}.json"
+      role: primary
+      note: "cells cmo, fluxnet, af_raw, af_corr; five seeds"
+  fields:
+    - "errs (80 per seed)"
+  filters:
+    - "cases 0:40 = anisotropy inside the training range, 40:80 = kappa = 20"
+    - "no retraining"
+  grouping: ["cell", "regime"]
+  aggregation: "median over the five seeds per case (a); mean of 40 cases x 5 seeds per regime (b)"
+  uncertainty: null
+  statistical_notes: >-
+    The 20x half is a different set of cases, not the same cases stretched; the
+    degradation therefore mixes the anisotropy with the case draw.
+
+panels:
+  a:
+    quantity: "relative L2 per case, median over the five seeds; pale = training range, solid = kappa = 20"
+    statistic: "40 cases per group per cell; heavy bar = mean"
+    source: "results/_ext80_<cell>_s{0..4}.json, cases 0:40 and 40:80"
+  b:
+    quantity: "pooled mean relative L2 of the same 40 cases, joined across the two regimes"
+    statistic: "means of the 40 cases x 5 seeds; labels give the change at 20x"
+    source: "same five files per cell"
+
+layout:
+  units: mm
+  width: 90
+  height: 110
+  size_source: layout_default
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    cmo: blue
+    fluxnet: teal
+    af_raw: coral
+    af_corr: coral
+
+exceptions: []
+
+notes: >-
+  The ranking check is the point of the figure: four cells, two regimes, no crossing
+  (claim 9).

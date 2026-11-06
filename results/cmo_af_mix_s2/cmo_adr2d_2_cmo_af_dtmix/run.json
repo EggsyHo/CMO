@@ -1,0 +1,13 @@
+{
+  "run_id": "cmo_adr2d_2_cmo_af_dtmix",
+  "config": "configs\\cmo_absflux.yaml",
+  "overrides": [
+    "data.paths=data/adr2d/adr2d_mixA.h5,data/adr2d/adr2d_mixB.h5,data/adr2d/adr2d_mixC.h5",
+    "data.num_workers=4",
+    "run.seed=2",
+    "run.out=results/cmo_af_mix_s2",
+    "run.tag=cmo_af_dtmix"
+  ],
+  "config_hash": "ee0c0bc5b7bb",
+  "param_count": 308405
+}

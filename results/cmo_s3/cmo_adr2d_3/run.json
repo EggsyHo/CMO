@@ -1,0 +1,10 @@
+{
+  "run_id": "cmo_adr2d_3",
+  "config": "configs\\default.yaml",
+  "overrides": [
+    "run.seed=3",
+    "run.out=results\\cmo_s3"
+  ],
+  "config_hash": "8374ad856834",
+  "param_count": 308407
+}

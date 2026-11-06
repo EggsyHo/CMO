@@ -1,0 +1,10 @@
+{
+  "run_id": "fluxnet_adr2d_4",
+  "config": "configs\\baseline_fluxnet.yaml",
+  "overrides": [
+    "run.seed=4",
+    "run.out=results\\fluxnet_s4"
+  ],
+  "config_hash": "6f8f512e0778",
+  "param_count": 265729
+}

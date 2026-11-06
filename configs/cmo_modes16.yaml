@@ -1,0 +1,7 @@
+# Diagnostic arm: is the coarse branch's *bandwidth* the bottleneck?
+# `modes` is the spectral cutoff (12 of 33 rfft bins = 36% of the band), not a
+# channel count -- raising `coarse_width` would add parameters without adding
+# bandwidth. 16 bins = 48%. Params land at ~538k, inside the 150k-600k band and
+# under 2x CMO, so this stays a like-for-like comparison.
+run:      {tag: cmo_m16, seed: 0, out: results/cmo_m16}
+model:    {name: cmo, modes: 16}

@@ -1,0 +1,10 @@
+{
+  "run_id": "cmo_adr2d_2",
+  "config": "configs\\default.yaml",
+  "overrides": [
+    "run.seed=2",
+    "run.out=results\\cmo_s2"
+  ],
+  "config_hash": "d2bfcc9c56ff",
+  "param_count": 308407
+}

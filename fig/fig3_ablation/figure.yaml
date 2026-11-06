@@ -1,0 +1,60 @@
+version: 1
+figure_id: fig3_ablation
+
+title: "Inside one training file: the detail branch is worth ~3%, and it is worth the same under both flux forms"
+purpose: >-
+  Adding the detail branch lowers the error by 0.013 in absolute terms on both forms
+  (a), 5 of 5 seeds each (b); the interaction is -0.0015 and not significant, so the
+  two design choices act independently.
+expression: "2 x 2 grouped bars with 95% CI (a), paired per-seed change (b)"
+arrangement: "row-3, full width, two panels side by side"
+
+data:
+  sources:
+    - path: "code/results/{cmo,cmo_nosep,cmo_af,cmo_af_nosep}_s*/cmo_adr2d_*_*/metrics_test.json"
+      role: primary
+      note: "four cells of the 2 x 2 design, five seeds each, resolved by figlib.run_dirs()"
+  fields:
+    - "rel_l2.final"
+  filters:
+    - "cells: cmo, cmo_nosep, cmo_af, cmo_af_nosep"
+    - "seeds: 0-4, paired across cells"
+    - "same training file, same 56 trajectories, same budget in all four runs"
+  grouping: ["flux form", "detail branch"]
+  aggregation: "mean of 5 seeds"
+  uncertainty: "95% CI over seeds in (a), t(0.95, 4) = 2.776; paired per-seed difference in (b)"
+  statistical_notes: >-
+    2 x 2 with seed as the blocking factor: main effect of the detail branch, main
+    effect of the flux form, and their interaction, all estimated from the same seeds.
+
+panels:
+  a:
+    quantity: "final relative L2 error for the 2 x 2 ablation: {form A, form B} x {no detail, detail}"
+    statistic: "mean of 5 seeds; whisker = 95% CI, t(0.95, 4) = 2.776"
+    source: "results/{cmo,cmo_nosep,cmo_af,cmo_af_nosep}_s*/.../metrics_test.json : rel_l2.final"
+  b:
+    quantity: "paired per-seed change when the detail branch is added"
+    statistic: "5 paired seeds; bar = mean over seeds"
+    source: "same four runs, paired by seed"
+
+layout:
+  units: mm
+  width: 164.6
+  height: 78
+  size_source: publication_override
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    cmo: blue
+    cmo_nosep: blue_light
+    cmo_af: coral
+    cmo_af_nosep: coral_light
+
+exceptions: []
+
+notes: >-
+  All four runs train on the same file, the same 56 trajectories and the same budget;
+  they differ only in the two switches.

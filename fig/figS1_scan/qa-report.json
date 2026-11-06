@@ -1,0 +1,59 @@
+{
+  "figure_id": "figS1_scan",
+  "generated_formats": [
+    "pdf",
+    "svg",
+    "png"
+  ],
+  "dimensions_mm": {
+    "width": 90.0,
+    "height": 110.0
+  },
+  "png": {
+    "dpi": 500.0,
+    "width_px": 1771,
+    "height_px": 2165
+  },
+  "pdf": {
+    "pages": 1,
+    "size_mm": [
+      90.0,
+      110.0
+    ],
+    "fonts": [
+      "BTGEGP+Arial-ItalicMT",
+      "DUDZLO+ArialMT",
+      "FIIJMS+Arial-BoldMT"
+    ]
+  },
+  "svg": {
+    "size_mm": [
+      90.0,
+      110.0
+    ],
+    "viewbox": [
+      255.12,
+      311.81
+    ]
+  },
+  "checks": {
+    "spec": "pass",
+    "files": "pass",
+    "dimensions": "pass",
+    "font": "pass",
+    "color": "pass",
+    "data_scope": "pass",
+    "visual_preview": "manual-pass",
+    "write_boundary": "pass"
+  },
+  "scripts": {
+    "plot": "code/fig/figS1_scan/plot.py",
+    "qa": "code/fig/qa_check.py"
+  },
+  "exceptions": [],
+  "notes": {
+    "data_scope": "plot.py reads the declared sources and asserts the key aggregates; a clean exit is the evidence, not a human look",
+    "visual_preview": "bbox/text-vs-data audit is automated, the look at the 500 dpi PNG is not: confirm by eye before submission"
+  },
+  "generated": "2026-11-06 17:03"
+}

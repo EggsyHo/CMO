@@ -1,0 +1,70 @@
+version: 1
+figure_id: fig4_dtband
+
+title: "Shrink the step with everything else held fixed: the forms that carry dt improve, the bounded form comes apart"
+purpose: >-
+  Between dt = 0.100 and dt = 0.016 on the same 80 parameter sets, CMO moves by 0.001
+  (inside the 0.0017 gap between the two references) and FluxNet gains 0.15, while
+  form B loses 0.12 and its seed scatter grows six-fold (a, b); the damage is
+  case-wide, not a tail (c).
+expression: "paired per-seed lines across two bands (a), seed-sd bars (b), empirical CDF of the per-case change (c)"
+arrangement: "row-4, full width, three panels side by side"
+
+data:
+  sources:
+    - path: "code/results/_dtonly_<cell>_s{0..4}.json"
+      role: primary
+      note: "56 in-file cases; cells cmo, fluxnet, af_raw, af_corr"
+    - path: "code/results/_dtonly_<cell>_s{0..4}_holdout.json"
+      role: primary
+      note: "the 24 held-out cases of the same 80 parameter sets"
+  fields:
+    - "coarse"
+    - "fine"
+    - "ref_shift"
+  filters:
+    - "bands: fine dt = 0.100 (coarse key) and dt = 0.016 (fine key)"
+    - "seeds: 0-4"
+    - "80 paired cases: 56 in-file + 24 holdout"
+  grouping: ["cell", "band"]
+  aggregation: "seed mean per case; pooled only for the CDF in (c)"
+  uncertainty: "sd(ddof=1) across the five seeds (b); per-case pairing in (c)"
+  statistical_notes: >-
+    The two references differ by rel_l2 = 0.0017, which bounds how much of any change
+    can be the target itself moving; CMO's +0.0012 sits inside that bound.
+
+panels:
+  a:
+    quantity: "final relative L2 error at dt = 0.100 (left) and dt = 0.016 (right)"
+    statistic: "one thin line per seed (5), heavy line = seed mean"
+    source: "results/_dtonly_<cell>_s*[_holdout].json : coarse, fine (56 + 24 cases)"
+  b:
+    quantity: "standard deviation across the five seeds"
+    statistic: "sd(ddof=1) of the per-seed means"
+    source: "same files"
+  c:
+    quantity: "per-case change from dt = 0.100 to dt = 0.016"
+    statistic: "empirical CDF over 400 paired cases (80 cases x 5 seeds)"
+    source: "same files; dashed = the 0.0017 gap between the two reference stacks"
+
+layout:
+  units: mm
+  width: 164.6
+  height: 78
+  size_source: publication_override
+  dpi: 500
+
+style:
+  font_library: "skill:references/font-library.yaml"
+  color_library: "skill:references/color-library.yaml"
+  semantic_colors:
+    cmo: blue
+    fluxnet: teal
+    af_raw: coral
+    af_corr: coral
+
+exceptions: []
+
+notes: >-
+  The 0.100 and 0.016 bands are the same 80 parameter vectors, so no case is
+  extrapolated here; the only thing that changes is the solver step.

@@ -1,0 +1,10 @@
+{
+  "run_id": "cmo_adr2d_0_cmo_af",
+  "config": "configs\\cmo_absflux.yaml",
+  "overrides": [
+    "run.seed=0",
+    "run.out=results\\cmo_af_s0"
+  ],
+  "config_hash": "ef851392b762",
+  "param_count": 308405
+}

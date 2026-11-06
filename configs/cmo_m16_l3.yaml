@@ -1,0 +1,7 @@
+# Diagnostic arm: keep the bandwidth gain of cmo_modes16 but pay less for it.
+# `modes: 16` alone costs 538k params (2.02x FluxNet) because the spectral stack
+# scales with modes^2 * n_layers. Dropping one layer buys back 131k while the
+# cutoff -- the thing the diagnosis identified as the bottleneck -- stays at 16.
+# Lands at ~406k: 1.32x CMO, 1.53x FluxNet, i.e. finally a comparable budget.
+run:      {tag: cmo_m16l3, seed: 0, out: results/cmo_m16l3}
+model:    {name: cmo, modes: 16, n_layers: 3}

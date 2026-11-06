@@ -1,0 +1,10 @@
+{
+  "run_id": "fno_adr2d_1",
+  "config": "configs\\baseline_fno.yaml",
+  "overrides": [
+    "run.seed=1",
+    "run.out=results\\fno_s1"
+  ],
+  "config_hash": "a2557a5742dc",
+  "param_count": 533121
+}
