@@ -4,9 +4,10 @@ data/adr2d/
 *.h5
 
 # -------------------------------------------------------------- training outputs
-# Per-run metrics stay in the repository (results/**/*.json, *.csv, *.yaml);
-# weights, field dumps and run logs are regenerable and are not committed.
-results/**/*.pth
+# Per-run metrics (results/**/*.json, *.csv, *.yaml) and the five-seed checkpoints
+# (results/**/best.pth, 1.2 MB each) are committed so the paper's numbers can be
+# re-derived and every stated result is backed by a weight file.  Field dumps and
+# run logs are regenerable and are not committed.
 results/**/*.pt
 results/**/*.ckpt
 results/**/*.bin
