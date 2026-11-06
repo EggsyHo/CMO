@@ -134,14 +134,15 @@ python tests/check_data.py      # dataset invariants
 
 ## What is in the repository, and what is not
 
-Committed: source, configs, data generators, figure code and rendered figures, and the
-per-run metrics (`results/**/*.json`, `*.csv`, `*.yaml`) that the figures and tables are
-drawn from, so every reported number can be re-derived and every figure redrawn.
+Committed: source, configs, data generators, figure code and rendered figures, the per-run
+metrics (`results/**/*.json`, `*.csv`, `*.yaml`) that the figures and tables are drawn from,
+and the `best.pth` checkpoint of every run (50 files, 1.2 MB each, 308k parameters). Every
+reported number can therefore be re-derived, and every figure that is metric-only redrawn,
+without retraining; the checkpoints cover the runs that need a rollout (Fig. S1).
 
-Not committed, because it is regenerable and large: the datasets (`~4.4 GB`), the trained
-weights (`~1.2 MB` per run), the rollout field dumps (`~37 GB`), and run logs. Re-running
-`scripts/gen_data.sh` and the training loop above reproduces them; the metrics files are
-what the paper's numbers come from, and they are versioned here.
+Not committed, because it is regenerable and large: the datasets (11 files, ~10 GB, archived
+separately with a DOI in the paper), the rollout field dumps (~38 GB), and run logs.
+`scripts/gen_data.sh` and the training loop above reproduce all three.
 
 ## Reproducibility notes
 
