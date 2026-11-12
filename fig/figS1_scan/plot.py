@@ -29,7 +29,7 @@ for k, m in MASKS.items():
 # --- numbers the panels claim ------------------------------------------------
 DIFF = {k: (ERR["cmo"][m] - ERR["fluxnet"][m]) / ERR["fluxnet"][m] * 100
         for k, m in MASKS.items()}
-GAIN = {(f, k): (ERR[nos][m] - ERR[sep][m]) / ERR[sep][m] * 100
+GAIN = {(f, k): (ERR[sep][m] - ERR[nos][m]) / ERR[nos][m] * 100
         for f, (sep, nos) in {"A": ("cmo", "cmo_nosep"),
                               "B": ("cmo_af", "cmo_af_nosep")}.items()
         for k, m in MASKS.items()}
@@ -39,7 +39,7 @@ WIN = {k: int((ERR["cmo"][m] < ERR["fluxnet"][m]).sum()) for k, m in MASKS.items
 # uses); the dots show how that difference is distributed over the cases
 POOL_DIFF = {k: (ERR["cmo"][m].mean() - ERR["fluxnet"][m].mean())
              / ERR["fluxnet"][m].mean() * 100 for k, m in MASKS.items()}
-POOL_GAIN = {(f, k): (ERR[nos][m].mean() - ERR[sep][m].mean()) / ERR[sep][m].mean() * 100
+POOL_GAIN = {(f, k): (ERR[sep][m].mean() - ERR[nos][m].mean()) / ERR[nos][m].mean() * 100
              for f, (sep, nos) in {"A": ("cmo", "cmo_nosep"),
                                    "B": ("cmo_af", "cmo_af_nosep")}.items()
              for k, m in MASKS.items()}
@@ -47,16 +47,16 @@ POOL_GAIN = {(f, k): (ERR[nos][m].mean() - ERR[sep][m].mean()) / ERR[sep][m].mea
 assert abs(POOL_DIFF[1.0] - 8.3) < 0.15, POOL_DIFF[1.0]
 assert abs(POOL_DIFF[20.0] - 10.5) < 0.15, POOL_DIFF[20.0]
 assert (WIN[1.0], WIN[20.0]) == (13, 5), WIN
-assert abs(POOL_GAIN[("A", 1.0)] - 5.70) < 0.1, POOL_GAIN[("A", 1.0)]
-assert abs(POOL_GAIN[("A", 20.0)] - 6.56) < 0.1, POOL_GAIN[("A", 20.0)]
-assert abs(POOL_GAIN[("B", 1.0)] - 3.64) < 0.1, POOL_GAIN[("B", 1.0)]
-assert abs(POOL_GAIN[("B", 20.0)] - 3.48) < 0.1, POOL_GAIN[("B", 20.0)]
-GAIN_WIN = {key: int((g > 0).sum()) for key, g in GAIN.items()}
+assert abs(POOL_GAIN[("A", 1.0)] + 5.39) < 0.1, POOL_GAIN[("A", 1.0)]
+assert abs(POOL_GAIN[("A", 20.0)] + 6.16) < 0.1, POOL_GAIN[("A", 20.0)]
+assert abs(POOL_GAIN[("B", 1.0)] + 3.51) < 0.1, POOL_GAIN[("B", 1.0)]
+assert abs(POOL_GAIN[("B", 20.0)] + 3.36) < 0.1, POOL_GAIN[("B", 20.0)]
+GAIN_WIN = {key: int((g < 0).sum()) for key, g in GAIN.items()}
 assert GAIN_WIN == {("A", 1.0): 37, ("A", 20.0): 40,
                     ("B", 1.0): 39, ("B", 20.0): 40}, GAIN_WIN
 
 fig = F.plt.figure(figsize=F.figsize(90, 110))
-gs = fig.add_gridspec(2, 1, hspace=0.40, left=0.205, right=0.968,
+gs = fig.add_gridspec(2, 1, hspace=0.46, left=0.245, right=0.968,
                       bottom=0.050, top=0.945)
 axes = [fig.add_subplot(gs[i]) for i in range(2)]
 rng = np.random.default_rng(7)
@@ -102,14 +102,15 @@ COL = {"A": F.ARM["cmo"][1], "B": F.ARM["cmo_af"][1]}
 for i, k in enumerate(LEVELS):
     for f in ("A", "B"):
         strip(ax, GAIN[(f, k)], i + OFF[f], COL[f], width=0.24, ms=1.8)
-        F.numeric(ax, f"{POOL_GAIN[(f, k)]:.1f}", i + OFF[f], GAIN[(f, k)].max() + 0.45,
-                  ha="center", va="bottom", color=COL[f])
+        F.numeric(ax, f"${POOL_GAIN[(f, k)]:.1f}\\%$", i + OFF[f],
+                  GAIN[(f, k)].min() - 0.45, ha="center", va="top", color=COL[f])
 
+ax.axhline(0.0, color=F.C["charcoal"], lw=0.6, ls=(0, (3, 2)), zorder=1)
 ax.set_xticks(range(len(LEVELS)))
 ax.set_xticklabels([f"$\\kappa$ = {int(k)}" for k in LEVELS])
 ax.set_xlim(-0.55, len(LEVELS) - 0.45)
-ax.set_ylim(0.0, max(v.max() for v in GAIN.values()) * 1.30)
-ax.set_ylabel("gain from the detail branch (%)")
+ax.set_ylim(min(v.min() for v in GAIN.values()) * 1.32, 2.2)
+ax.set_ylabel("error change without detail (%)")
 F.clean(ax)
 F.letter(ax, "b")
 

@@ -20,9 +20,10 @@ code/
 ├── configs/          one YAML per arm; `default.yaml` is the full model
 ├── data/
 │   ├── gen_adr2d.py  ADR2D dataset generator (finite-volume reference solver)
-│   ├── selfcheck_solver.py  solver convergence self-check (Table 1)
+│   ├── selfcheck_solver.py  solver convergence self-check (Table 2)
 │   └── check_data.py        dataset sanity checks
-├── scripts/          experiment drivers (one-off analyses, seed sweeps, transfer, Δt band)
+├── scripts/          experiment drivers (one-off analyses, seed sweeps, transfer, Δt band,
+│                     and the verification study of Tables 2--4)
 ├── tests/            numerical unit tests (run directly, no pytest needed)
 ├── fig/              figure sources: figlib.py, one directory per figure, QA gate
 └── requirements.txt
@@ -38,7 +39,8 @@ pip install torch --index-url https://download.pytorch.org/whl/cu121
 pip install -r requirements.txt
 ```
 
-Everything runs on a single GPU; a training run peaks at ~192 MB of VRAM.
+Everything runs on a single GPU; a CMO training run peaks at ~192 MB of VRAM (0.27 GB over the
+five seeds of the paper), while the dense flux-form baselines (FluxNet, NFV) peak at ~2.17 GB.
 
 ## 1. Data
 
@@ -49,10 +51,11 @@ bash scripts/gen_data.sh          # writes data/adr2d/*.h5 (~4.4 GB in total)
 The script runs `data/selfcheck_solver.py` first and aborts if the reference solver is not
 converged. Generation is solver-bound and takes a while; it is a one-off.
 
-The Δt pair used for the timestep band (Table 3, Fig. 5) is deliberately *not* part of
+The Δt pair used for the timestep band (Table 7, Fig. 5) is deliberately *not* part of
 `gen_data.sh`, because both files must share the same 80 parameters and differ only in
-`dt`. The reference solutions agree to 0.17% at t=20, so any error change is attributable
-to the model:
+`dt`. The reference solutions agree to 0.19% (relative L2 at t=20, the first-order temporal
+error of the explicit-Euler reference), so any larger error change is attributable to the
+model:
 
 ```bash
 python data/gen_adr2d.py --regime train --n 80 --T 200  --dt 0.100 --seed 0 --out data/adr2d/adr2d_dtcoarse.h5
@@ -60,7 +63,7 @@ python data/gen_adr2d.py --regime train --n 80 --T 400  --dt 0.050 --seed 0 --ou
 python data/gen_adr2d.py --regime train --n 80 --T 1250 --dt 0.016 --seed 0 --out data/adr2d/adr2d_dtfine.h5
 ```
 
-The three mixed-rate sets behind the retraining control (Table 4) are not part of the data
+The three mixed-rate sets behind the retraining control (Table 8) are not part of the data
 archive because of its size cap; they come from the same 80 parameter draws (`--seed 7`) and
 are regenerated exactly by:
 
@@ -70,7 +73,49 @@ python data/gen_adr2d.py --regime train --n 80 --T 400  --dt 0.050 --seed 7 --ou
 python data/gen_adr2d.py --regime train --n 80 --T 1000 --dt 0.020 --seed 7 --out data/adr2d/adr2d_mixC.h5
 ```
 
-## 2. Train
+## 2. Verify the reference operator
+
+Four scripts stand behind the verification section of the paper (Tables 1--4) and the
+audit of the shipped archive. None of them trains anything, and the first two need no
+dataset:
+
+```bash
+python scripts/verify_1d_analytic.py --out results/verification/verify_1d.json
+python scripts/baseline_2d_schemes.py --out results/verification/baseline_2d.json   # ~15 min, CPU
+python scripts/audit_dataset.py --file data/adr2d/adr2d.h5 --n 12
+python scripts/probe_heterogeneity.py --n 2 --N 128
+```
+
+`verify_1d_analytic.py` measures the order of the three reconstructions on a smooth pulse
+and their absolute error against the closed-form Ogata--Banks solution at a fixed cell
+Péclet number. `baseline_2d_schemes.py` runs donor-cell upwinding, MUSCL--van Leer and
+WENO5 through the same operator on the production case: it reproduces `fvm_step` to
+round-off both for a single step ($10^{-16}$) and over a whole 200-step trajectory
+($10^{-15}$), measures the formal order on a smooth 2D Gaussian, and prices the
+reconstruction, grid and step against one refined solution. Its production studies use
+the archive's own integrator (explicit Euler); the order study of the 2D Gaussian uses
+SSP-RK3, because a first-order integrator would cap the measured rate at one.
+`audit_dataset.py`
+independently re-derives the mass budget of a stored archive (flux divergence, source
+integral, decay, sorption partition) and exits non-zero if the per-step identity is violated
+beyond $10^{-6}$ relative, if the stored flux is not divergence-free to $10^{-8}$, or if the
+medium is not uniform. `probe_heterogeneity.py` compares a trajectory on a log-normal
+conductivity field with the same trajectory on a uniform one, which is the number quoted
+in the limitations.
+
+The conductivity of the medium is a generator flag. The archive uses the default:
+
+```bash
+python data/gen_adr2d.py ... --conductivity uniform     # K == 1, the published benchmark
+python data/gen_adr2d.py ... --conductivity lognormal   # unit-mean correlated field
+```
+
+With `lognormal` the Darcy head is solved so that the stored flux is divergence-free for
+the same difference operator the update uses. The contrast raises the local dispersion
+number, so such a set needs a smaller step than the archived $\Delta t=0.1$ (the
+generator aborts on its own CFL gate rather than producing an unstable reference).
+
+## 3. Train
 
 ```bash
 python src/train.py --config configs/default.yaml --set run.seed=0
@@ -92,7 +137,7 @@ done
 single-axis deletions of it; `configs/baseline_*.yaml` hold the comparison operators and
 `configs/ablation_*.yaml` the earlier four-way ablation.
 
-## 3. Evaluate
+## 4. Evaluate
 
 ```bash
 python src/evaluate.py --ckpt results/<run_id>/best.pth --modes test ext
@@ -101,7 +146,7 @@ python src/evaluate.py --ckpt results/<run_id>/best.pth --modes test ext
 Metrics land in the run directory as JSON; the analysis scripts in `scripts/` aggregate
 them into the JSON/CSV files the figures read.
 
-## 4. Figures and tables
+## 5. Figures and tables
 
 Figures 1--4, 6 and S2 are drawn from the committed metrics and can be redrawn without
 retraining or without the datasets:
@@ -125,14 +170,17 @@ panel was added, so `figN_*` is the manuscript's Figure N+1.
 | Manuscript | Data comes from | Directory |
 |---|---|---|
 | Fig. 1 framework | schematic, no data | `fig/fig0_framework` |
-| Fig. 2, Table 1 | `configs/default.yaml`, `configs/baseline_*.yaml` | `fig/fig1_main` |
+| Table 1, Table 4 | `scripts/baseline_2d_schemes.py` (control numbers, error budget) | — |
+| Table 2 | `scripts/verify_1d_analytic.py`, `data/selfcheck_solver.py` | — |
+| Table 3 | `scripts/baseline_2d_schemes.py --smooth-grids 64,128,256` | — |
+| Fig. 2, Table 5 | `configs/default.yaml`, `configs/baseline_*.yaml` | `fig/fig1_main` |
 | Fig. 3 error decomposition | `scripts/lag_decomposition.py`, `scripts/centroid_drift.py` | `fig/fig2_decomposition` |
-| Fig. 4, Table 2 (2×2) | `default`, `cmo_nosep`, `cmo_absflux`, `cmo_af_nosep` | `fig/fig3_ablation` |
-| Fig. 5, Table 3 (Δt band) | Δt pair above + `scripts/dt_only_band.py`, `scripts/bound_dt_*.py` | `fig/fig4_dtband` |
-| Fig. 6, Table 4 (retrain) | `scripts/ext_seeds_*.py`, `scripts/dt_only_band.py` | `fig/fig5_retrain` |
+| Fig. 4, Table 6 (2×2) | `default`, `cmo_nosep`, `cmo_absflux`, `cmo_af_nosep` | `fig/fig3_ablation` |
+| Fig. 5, Table 7 (Δt band) | Δt pair above + `scripts/dt_only_band.py`, `scripts/bound_dt_*.py` | `fig/fig4_dtband` |
+| Fig. 6, Table 8 (retrain) | `scripts/ext_seeds_*.py`, `scripts/dt_only_band.py` | `fig/fig5_retrain` |
 | Fig. S1 (κ=20, zero-shot) | `scripts/kappa_zeroshot.py` | `fig/figS1_scan` |
 | Fig. S2 (extrapolation) | `scripts/ext_zeroshot.py`, `scripts/ext_seeds_full.py` | `fig/figS2_extrap` |
-| Table 5 (resolution transfer) | `scripts/resolution_transfer.py` on `adr2d_128test.h5` | — |
+| Table 9 (resolution transfer) | `scripts/resolution_transfer.py` on `adr2d_128test.h5` | — |
 
 ## Tests
 

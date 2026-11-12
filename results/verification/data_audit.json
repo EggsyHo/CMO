@@ -1,0 +1,42 @@
+{
+  "dx": 1.0,
+  "generator_version": "1.0",
+  "summary": {
+    "variance_ratio_q": {
+      "min": 0.0,
+      "median": 9.369560416416789e-08,
+      "max": 2.47231440653195e-07
+    },
+    "variance_ratio_D": {
+      "min": 0.0,
+      "median": 9.905309639179904e-08,
+      "max": 2.0825464730478416e-07
+    },
+    "max_div_q_over_scale": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.0
+    },
+    "source_sum_per_step_last": {
+      "min": 1.1789947748184204,
+      "median": 1.3368532061576843,
+      "max": 1.8036657571792603
+    },
+    "mass_audit_resid": {
+      "min": 1.421077273008219e-08,
+      "median": 2.7188780943761065e-08,
+      "max": 5.40456553399869e-08
+    },
+    "peak_C": {
+      "min": 0.33770251274108887,
+      "median": 0.5697764754295349,
+      "max": 0.9865251183509827
+    }
+  },
+  "verdict": {
+    "velocity_uniform": true,
+    "D_uniform": true,
+    "divergence_free": true,
+    "mass_audit_ok": true
+  }
+}

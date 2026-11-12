@@ -46,7 +46,9 @@ with h5py.File(path) as f:
 PYEOF
 }
 
-gen data/adr2d/adr2d.h5 400 --regime train --n 400 --T 200 --dt 0.1 --seed 0
+# --conductivity uniform is the archive's medium (K == 1); it is the default, and it is
+# written out here so that a change of default cannot silently alter the benchmark.
+gen data/adr2d/adr2d.h5 400 --regime train --n 400 --T 200 --dt 0.1 --seed 0 --conductivity uniform
 gen data/adr2d/adr2d_ext.h5 80 --regime ext --n 80 --T 1250 --dt 0.016 --seed 0
 gen data/adr2d/adr2d_kappa.h5 80 --regime kappa1,kappa20 --n 40,40 --T 200 --dt 0.1 --seed 0
 gen data/adr2d/adr2d_long.h5 20 --regime train --n 20 --T 200 --dt 0.1 --long-T 200 --seed 0

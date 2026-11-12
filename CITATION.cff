@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this code, please cite the accompanying manuscript."
-title: "Conservation-Exact Multiscale Operator Learning for Sharp-Front Transport Fields"
+title: "CMO: an open-source mass-conservative multiscale operator for reactive transport with sharp fronts"
 type: software
 version: 1.0.0
 license: MIT

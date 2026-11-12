@@ -67,8 +67,10 @@ for gi, (sep, nos) in enumerate(CELLS):
     ax.scatter(np.full(5, gi) + np.linspace(-0.07, 0.07, 5), d, s=10,
                facecolor="white", edgecolor=colour, linewidth=0.7, zorder=4)
     ax.plot([gi - 0.16, gi + 0.16], [d.mean()] * 2, color=colour, lw=1.0, zorder=5)
-    F.numeric(ax, f"$-${100 * ((v[sep].mean() - v[nos].mean()) / v[nos].mean()):.1f}%",
-              gi + 0.19, d.mean(), ha="left", va="center", color=colour)
+    percent = 100 * (v[sep].mean() - v[nos].mean()) / v[nos].mean()
+    assert abs(percent - PCT[sep]) < 0.05, f"{sep}: {percent:.2f} vs {PCT[sep]}"
+    F.numeric(ax, f"${percent:.1f}\\%$", gi + 0.19, d.mean(), ha="left",
+              va="center", color=colour)
 ax.set_xticks([0, 1], XLAB)
 ax.set_xlim(-0.45, 1.55)
 ax.set_ylim(0.0, 0.037)

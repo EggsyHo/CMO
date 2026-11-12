@@ -1,6 +1,9 @@
 """ADR-2D reference data generator: vectorised finite-volume solver (§3.1).
 
-numpy + FFT only — no torch, so the generator runs without the model package.
+numpy + scipy only — no torch, so the generator runs without the model package.  The
+medium is "uniform" by default (K == 1, the archived benchmark); "--conductivity
+lognormal" draws a unit-mean correlated field per trajectory and solves the Darcy head
+with a divergence-free projection built from the same difference operator as the update.
 
 Governing equation (periodic on [0,L]^2, dx = 1 m):
 
@@ -26,6 +29,7 @@ import time
 
 import h5py
 import numpy as np
+from scipy.sparse.linalg import LinearOperator, cg
 
 DX = 1.0
 DOMAIN = 64.0
@@ -121,7 +125,14 @@ def sample_parameters_multi(rng: np.random.Generator, regimes: list[str],
 # --------------------------------------------------------------------------- #
 def gen_log_normal_field(rng: np.random.Generator, n: int, N: int, corr_len: np.ndarray,
                          k_var: np.ndarray | None = None) -> np.ndarray:
-    """[n,N,N] unit-mean log-normal field by spectral synthesis."""
+    """[n,N,N] unit-mean log-normal field by spectral synthesis.
+
+    ``corr_len`` is a physical length in metres and must therefore be divided by
+    the domain size before it multiplies an integer wavenumber: the Gaussian
+    correlation exp(-r^2/2ell^2) has spectrum exp(-2 pi^2 ell^2 k^2/L^2).  Omitting
+    the /L^2 makes the filter's width of order one grid cell (every k>0 is damped
+    to zero), which returns a constant field rather than a random one.
+    """
     kx = np.fft.fftfreq(N, d=1.0 / N)[None, :]
     ky = np.fft.fftfreq(N, d=1.0 / N)[:, None]
     k2 = kx ** 2 + ky ** 2
@@ -129,7 +140,7 @@ def gen_log_normal_field(rng: np.random.Generator, n: int, N: int, corr_len: np.
     sigma_ln = np.asarray(k_var if k_var is not None else np.full(n, 0.5), dtype=np.float64)
     for i in range(n):
         ell = float(corr_len[i])
-        filt = np.exp(-np.pi ** 2 * ell ** 2 * k2 / 2.0)
+        filt = np.exp(-2.0 * np.pi ** 2 * ell ** 2 * k2 / DOMAIN ** 2)
         white = rng.standard_normal((N, N))
         field = np.real(np.fft.ifft2(np.fft.fft2(white) * filt))
         field = (field - field.mean()) / (field.std() + 1e-12)
@@ -162,43 +173,58 @@ def _solve_poisson_fd(rhs: np.ndarray, dx: float = DX) -> np.ndarray:
     return np.real(np.fft.ifft2(r_hat))
 
 
+def _solve_head_hetero(K: np.ndarray, rhs: np.ndarray, dx: float) -> np.ndarray:
+    """Solve div(K grad phi) = rhs on the periodic cell, to CG tolerance.
+
+    The operator is built from the *same* finite-difference pair as the update
+    (backward divergence of a forward gradient), so the head it returns makes the
+    flux divergence-free for the discretisation rather than for the continuum.
+    A fixed-point/Picard iteration with a constant-coefficient preconditioner ---
+    the obvious alternative --- is only conditionally convergent in the contrast,
+    which is why the heterogeneous branch is solved rather than iterated.
+    """
+    n, N, _ = K.shape
+    out = np.empty((n, N, N), dtype=np.float64)
+    for i in range(n):
+        Ki = K[i]
+
+        def matvec(p, Ki=Ki):
+            p2 = p.reshape(N, N)
+            gxp = (np.roll(p2, -1, axis=1) - p2) / dx
+            gyp = (np.roll(p2, -1, axis=0) - p2) / dx
+            qx, qy = Ki * gxp, Ki * gyp
+            return ((qx - np.roll(qx, 1, axis=1)) / dx
+                    + (qy - np.roll(qy, 1, axis=0)) / dx).ravel()
+
+        op = LinearOperator((N * N, N * N), matvec=matvec, dtype=np.float64)
+        sol, info = cg(op, rhs[i].ravel(), rtol=1e-13, atol=0.0, maxiter=4000)
+        if info != 0:
+            raise RuntimeError(f"variable-coefficient head solve did not converge ({info})")
+        out[i] = sol.reshape(N, N)
+    return out
+
+
 def darcy_velocity(K: np.ndarray, gx: np.ndarray, gy: np.ndarray,
                    n_iter: int = 60, dx: float = DX) -> tuple[np.ndarray, np.ndarray, float]:
     """Divergence-free Darcy velocity q = -K(grad h - g), then FD projection.
 
     Returns (qx, qy, max|div q| / (|q|/dx)). The projection step is what makes the
     stored velocity divergence-free *for the finite-difference operator the update
-    uses*, which is the property the mass audit relies on.
+    uses*, which is the property the mass audit relies on. ``n_iter`` is retained
+    for call compatibility and is unused: the head is now solved, not iterated.
+    For K == const the projection is the identity (div q* == 0 to round-off), so
+    the uniform branch returns q = K g exactly as before.
     """
     n, N, _ = K.shape
     gx = np.asarray(gx, dtype=np.float64).reshape(n, 1, 1)
     gy = np.asarray(gy, dtype=np.float64).reshape(n, 1, 1)
-    kx = np.fft.fftfreq(N, d=1.0 / N)[None, :]
-    ky = np.fft.fftfreq(N, d=1.0 / N)[:, None]
-    k2 = (kx ** 2 + ky ** 2)
-    k2i = np.where(k2 > 0, 1.0 / np.maximum(k2, 1e-12), 0.0)
-    kbar = K.mean(axis=(1, 2)).reshape(n, 1, 1)
 
-    h = np.zeros_like(K)
-    for _ in range(n_iter):
-        gxh = np.real(np.fft.ifft2(1j * kx * np.fft.fft2(h)))
-        gyh = np.real(np.fft.ifft2(1j * ky * np.fft.fft2(h)))
-        kgh = np.real(np.fft.ifft2(1j * kx * np.fft.fft2(K * gx)))
-        kgh = kgh + np.real(np.fft.ifft2(1j * ky * np.fft.fft2(K * gy)))
-        res = (np.real(np.fft.ifft2(1j * kx * np.fft.fft2(K * gxh)))
-               + np.real(np.fft.ifft2(1j * ky * np.fft.fft2(K * gyh))) - kgh)
-        h = h - np.real(np.fft.ifft2(np.fft.fft2(res) * k2i)) * kbar
-
-    gxh = np.real(np.fft.ifft2(1j * kx * np.fft.fft2(h)))
-    gyh = np.real(np.fft.ifft2(1j * ky * np.fft.fft2(h)))
-    qx = -K * (gxh - gx)
-    qy = -K * (gyh - gy)
-
-    # exact discrete projection: q <- q - grad(phi) with L phi = div(q)
+    qx = K * gx
+    qy = K * gy
     div = _fd_div(qx, qy, dx)
-    phi = np.stack([_solve_poisson_fd(div[i], dx) for i in range(n)], 0)
+    phi = _solve_head_hetero(K, div, dx)
     px, py = _fd_grad(phi, dx)
-    qx, qy = qx - px, qy - py
+    qx, qy = qx - K * px, qy - K * py
     div = _fd_div(qx, qy, dx)
     scale = np.maximum(np.sqrt(qx ** 2 + qy ** 2).mean(axis=(1, 2)), 1e-12) / dx
     residual = float(np.max(np.abs(div)) / np.max(scale))
@@ -393,13 +419,25 @@ def _grid(N: int, dx: float):
 
 
 def _run_block(prm: dict, idx: np.ndarray, N: int, T: int, dt: float,
-               rng: np.random.Generator, background: float = 0.0) -> dict:
-    """Integrate one block of trajectories; returns float32 fields + QC numbers."""
+               rng: np.random.Generator, background: float = 0.0,
+               cond: str = "uniform") -> dict:
+    """Integrate one block of trajectories; returns float32 fields + QC numbers.
+
+    ``cond`` selects the conductivity of the medium: "uniform" (K == 1, the
+    archived benchmark, every trajectory a stationary homogeneous medium) or
+    "lognormal" (a unit-mean correlated field per trajectory, seeded by the same
+    stream so the file stays reproducible).
+    """
     nb = idx.size
     dx = DOMAIN / N
     sub = {k: (np.asarray(v)[idx] if isinstance(v, np.ndarray) and v.ndim == 1 else v)
            for k, v in prm.items()}
-    K = gen_log_normal_field(rng, nb, N, sub["corr_len"], sub["k_var"])
+    if cond == "lognormal":
+        K = gen_log_normal_field(rng, nb, N, sub["corr_len"], sub["k_var"])
+    elif cond == "uniform":
+        K = np.ones((nb, N, N), dtype=np.float64)
+    else:
+        raise ValueError(f"unknown conductivity mode {cond!r}")
     qx, qy, div_res = darcy_velocity(K, sub["gx"], sub["gy"], dx=dx)
     D = dispersion_tensor(qx, qy, sub["theta"], sub["alpha_l"], sub["alpha_t"])
     cfl = check_cfl(qx, qy, D, dt, dx)
@@ -462,7 +500,7 @@ def _write_traj(fh: h5py.File, name: str, blk: dict, prm: dict) -> None:
 def generate_to_file(path: str, regime: str, n: int, T: int, N: int = 64, dt: float = 0.2,
                      seed: int = 0, splits: dict | None = None, batch: int = 25,
                      long_n: int = 0, long_T: int = 0, ref128: int = 0,
-                     verbose: bool = True) -> dict:
+                     verbose: bool = True, cond: str = "uniform") -> dict:
     rng = np.random.default_rng(seed)
     regimes, counts = parse_regimes(regime, n)
     n = int(sum(counts))
@@ -472,7 +510,7 @@ def generate_to_file(path: str, regime: str, n: int, T: int, N: int = 64, dt: fl
         ids = np.arange(n)
         splits = {"train": ids[:n], "val": np.array([], dtype=int), "test": np.array([], dtype=int)}
     meta = {"N": N, "T": T, "dt": dt, "dx": DOMAIN / N, "regime": "+".join(regimes), "seed": seed,
-            "generator_version": GENERATOR_VERSION, "n_traj": n,
+            "generator_version": GENERATOR_VERSION, "n_traj": n, "conductivity": cond,
             "regime_blocks": json.dumps(list(zip(regimes, counts))),
             "bands": json.dumps([{"regime": r, "n": c,
                                   "bands": {k: list(v) if isinstance(v, tuple) else v
@@ -482,7 +520,7 @@ def generate_to_file(path: str, regime: str, n: int, T: int, N: int = 64, dt: fl
     ref_store: dict[int, tuple] = {}
     if ref128:
         sub_idx = np.arange(min(ref128, n))
-        blk = _run_block(prm, sub_idx, 2 * N, T, dt, rng)
+        blk = _run_block(prm, sub_idx, 2 * N, T, dt, rng, cond=cond)
         for j, tid in enumerate(sub_idx):
             ref_store[int(tid)] = (blk["C"][j], {k: np.asarray(v)[tid] if isinstance(v, np.ndarray) and v.ndim == 1 else v
                                                  for k, v in prm.items()})
@@ -502,7 +540,7 @@ def generate_to_file(path: str, regime: str, n: int, T: int, N: int = 64, dt: fl
 
         for start in range(0, n, batch):
             idx = np.arange(start, min(start + batch, n))
-            blk = _run_block(prm, idx, N, T, dt, rng)
+            blk = _run_block(prm, idx, N, T, dt, rng, cond=cond)
             for k in worst:
                 if k in blk["qc"]:
                     worst[k] = max(worst[k], blk["qc"][k])
@@ -578,6 +616,9 @@ def main(argv=None) -> int:
     ap.add_argument("--long-n", type=int, default=0)
     ap.add_argument("--long-T", type=int, default=0)
     ap.add_argument("--ref128", type=int, default=0)
+    ap.add_argument("--conductivity", default="uniform", choices=("uniform", "lognormal"),
+                    help="medium: 'uniform' (K==1, the archived benchmark) or "
+                         "'lognormal' (unit-mean correlated field per trajectory)")
     args = ap.parse_args(argv)
 
     n_arg = [int(x) for x in str(args.n).split(",")] if "," in str(args.n) else int(args.n)
@@ -592,7 +633,8 @@ def main(argv=None) -> int:
         splits = {"train": np.array([], dtype=np.int32), "val": ids, "test": ids}
     info = generate_to_file(args.out, args.regime, n_arg, args.T, N=args.N, dt=args.dt,
                             seed=args.seed, splits=splits, batch=args.batch,
-                            long_n=args.long_n, long_T=args.long_T, ref128=args.ref128)
+                            long_n=args.long_n, long_T=args.long_T, ref128=args.ref128,
+                            cond=args.conductivity)
     print(json.dumps(info, indent=2))
     return 0
 
