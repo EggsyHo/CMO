@@ -170,17 +170,19 @@ panel was added, so `figN_*` is the manuscript's Figure N+1.
 | Manuscript | Data comes from | Directory |
 |---|---|---|
 | Fig. 1 framework | schematic, no data | `fig/fig0_framework` |
-| Table 1, Table 4 | `scripts/baseline_2d_schemes.py` (control numbers, error budget) | — |
+| Table 1 | `scripts/control_numbers.py` (control numbers, from the archive) | — |
 | Table 2 | `scripts/verify_1d_analytic.py`, `data/selfcheck_solver.py` | — |
 | Table 3 | `scripts/baseline_2d_schemes.py --smooth-grids 64,128,256` | — |
-| Fig. 2, Table 5 | `configs/default.yaml`, `configs/baseline_*.yaml` | `fig/fig1_main` |
+| Table 4 | `scripts/baseline_2d_schemes.py` (error budget) | — |
+| Table 5 | the command-to-artefact map itself, no data | — |
+| Fig. 2, Table 6 | `configs/default.yaml`, `configs/baseline_*.yaml` | `fig/fig1_main` |
 | Fig. 3 error decomposition | `scripts/lag_decomposition.py`, `scripts/centroid_drift.py` | `fig/fig2_decomposition` |
-| Fig. 4, Table 6 (2×2) | `default`, `cmo_nosep`, `cmo_absflux`, `cmo_af_nosep` | `fig/fig3_ablation` |
-| Fig. 5, Table 7 (Δt band) | Δt pair above + `scripts/dt_only_band.py`, `scripts/bound_dt_*.py` | `fig/fig4_dtband` |
-| Fig. 6, Table 8 (retrain) | `scripts/ext_seeds_*.py`, `scripts/dt_only_band.py` | `fig/fig5_retrain` |
+| Fig. 4, Table 7 (2×2) | `default`, `cmo_nosep`, `cmo_absflux`, `cmo_af_nosep` | `fig/fig3_ablation` |
+| Fig. 5, Table 8 (Δt band) | Δt pair above + `scripts/dt_only_band.py`, `scripts/bound_dt_*.py` | `fig/fig4_dtband` |
+| Fig. 6, Table 9 (retrain) | `scripts/ext_seeds_*.py`, `scripts/dt_only_band.py` | `fig/fig5_retrain` |
 | Fig. S1 (κ=20, zero-shot) | `scripts/kappa_zeroshot.py` | `fig/figS1_scan` |
 | Fig. S2 (extrapolation) | `scripts/ext_zeroshot.py`, `scripts/ext_seeds_full.py` | `fig/figS2_extrap` |
-| Table 9 (resolution transfer) | `scripts/resolution_transfer.py` on `adr2d_128test.h5` | — |
+| Table 10 (resolution transfer) | `scripts/resolution_transfer.py` on `adr2d_128test.h5` | — |
 
 ## Tests
 
